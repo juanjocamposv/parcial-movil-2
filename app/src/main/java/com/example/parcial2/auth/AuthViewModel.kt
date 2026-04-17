@@ -6,25 +6,27 @@ import com.example.parcial2.data.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.Period
-import java.time.format.DateTimeFormatter
+import java.util.*
+import java.text.SimpleDateFormat
 
-/** Shared ViewModel for Login / Register / ForgotPassword screens. */
 class AuthViewModel : ViewModel() {
 
     private val repo = UserRepository()
-
-    // Loading & error states exposed to the UI
+    
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
-    // ── Login ─────────────────────────────────────────────────────────────────
+    private val _resetSent = MutableStateFlow(false)
+    val resetSent: StateFlow<Boolean> = _resetSent
+
     fun login(email: String, password: String, onSuccess: () -> Unit) {
-        if (!validateLoginInputs(email, password)) return
+        if (email.isBlank() || password.isBlank()) {
+            _errorMessage.value = "Correo y contraseña son obligatorios."
+            return
+        }
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
@@ -36,13 +38,21 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    // ── Register ──────────────────────────────────────────────────────────────
-    fun register(email: String, password: String, confirm: String, birthDate: String, onSuccess: () -> Unit) {
-        if (!validateRegisterInputs(email, password, confirm, birthDate)) return
+    fun register(
+        email: String,
+        password: String,
+        confirm: String,
+        birthDate: String,
+        idType: String,
+        idNumber: String,
+        onSuccess: () -> Unit
+    ) {
+        if (!validateInputs(email, password, confirm, birthDate, idNumber)) return
+        
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
-            repo.register(email.trim(), password).fold(
+            repo.register(email.trim(), password, idType, idNumber, birthDate).fold(
                 onSuccess = { onSuccess() },
                 onFailure = { _errorMessage.value = friendlyError(it) }
             )
@@ -50,12 +60,8 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    // ── Password Reset ────────────────────────────────────────────────────────
-    private val _resetSent = MutableStateFlow(false)
-    val resetSent: StateFlow<Boolean> = _resetSent
-
     fun sendPasswordReset(email: String) {
-        if (email.isBlank()) { _errorMessage.value = "Enter your email address."; return }
+        if (email.isBlank()) { _errorMessage.value = "Ingresa tu correo."; return }
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
@@ -67,51 +73,53 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    fun clearError() { _errorMessage.value = null }
-
-    // ── Validation helpers ────────────────────────────────────────────────────
-    private fun validateLoginInputs(email: String, password: String): Boolean {
-        return when {
-            email.isBlank()    -> { _errorMessage.value = "Email cannot be empty."; false }
-            password.isBlank() -> { _errorMessage.value = "Password cannot be empty."; false }
-            else               -> true
+    private fun validateInputs(email: String, pass: String, conf: String, date: String, id: String): Boolean {
+        if (email.isBlank() || pass.isBlank() || id.isBlank() || date.isBlank()) {
+            _errorMessage.value = "Todos los campos son obligatorios."; return false
         }
-    }
+        if (id.length !in 5..15) {
+            _errorMessage.value = "El documento debe tener entre 5 y 15 dígitos."; return false
+        }
+        if (pass.length < 6) {
+            _errorMessage.value = "La contraseña debe tener al menos 6 caracteres."; return false
+        }
+        if (pass != conf) {
+            _errorMessage.value = "Las contraseñas no coinciden."; return false
+        }
 
-    private fun validateRegisterInputs(email: String, password: String, confirm: String, birthDate: String): Boolean {
-        if (email.isBlank()) { _errorMessage.value = "Email cannot be empty."; return false }
-        if (password.length < 6) { _errorMessage.value = "Password must be at least 6 characters."; return false }
-        if (password != confirm) { _errorMessage.value = "Passwords do not match."; return false }
-        
-        // Birth date validation (format YYYY-MM-DD or simple presence)
-        if (birthDate.isBlank()) { _errorMessage.value = "Please enter your birth date."; return false }
-        
-        return try {
-            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-            val birth = LocalDate.parse(birthDate, formatter)
-            val today = LocalDate.now()
-            if (birth.isAfter(today)) {
-                _errorMessage.value = "You can't be born in the future!"; false
-            } else if (Period.between(birth, today).years < 13) {
-                _errorMessage.value = "You must be at least 13 years old to play."; false
-            } else {
-                true
+        try {
+            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val birthDateObj = sdf.parse(date) ?: return false
+            val birth = Calendar.getInstance().apply { time = birthDateObj }
+            val today = Calendar.getInstance()
+            
+            var age = today.get(Calendar.YEAR) - birth.get(Calendar.YEAR)
+            if (today.get(Calendar.DAY_OF_YEAR) < birth.get(Calendar.DAY_OF_YEAR)) {
+                age--
+            }
+            
+            if (age < 18) {
+                _errorMessage.value = "Debes ser mayor de 18 años para registrarte."; return false
             }
         } catch (e: Exception) {
-            _errorMessage.value = "Invalid date format. Use YYYY-MM-DD."; false
+            _errorMessage.value = "Formato de fecha inválido."; return false
         }
+        return true
     }
 
-    /** Converts Firebase exceptions into readable messages. */
+    fun clearError() { 
+        _errorMessage.value = null 
+        _resetSent.value = false
+    }
+
     private fun friendlyError(t: Throwable): String {
-        val msg = t.message ?: "Unknown error"
+        val msg = t.message ?: "Error desconocido"
         return when {
-            "no user record"    in msg.lowercase() -> "No account found with that email."
-            "password is invalid" in msg.lowercase() ||
-            "wrong password"      in msg.lowercase() -> "Incorrect password."
-            "email address is already" in msg.lowercase() -> "This email is already registered."
-            "badly formatted"   in msg.lowercase() -> "Invalid email format."
-            "network"           in msg.lowercase() -> "Network error. Check your connection."
+            "no user record" in msg.lowercase() -> "No se encontró cuenta con este correo."
+            "password is invalid" in msg.lowercase() || "wrong password" in msg.lowercase() -> "Contraseña incorrecta."
+            "already in use" in msg.lowercase() -> "Este correo ya está registrado."
+            "badly formatted" in msg.lowercase() -> "Formato de correo inválido."
+            "network" in msg.lowercase() -> "Error de red. Revisa tu conexión."
             else -> msg
         }
     }
