@@ -38,7 +38,7 @@ fun LoginScreen(
         Text("👾", style = MaterialTheme.typography.headlineLarge)
         Spacer(Modifier.height(8.dp))
         Text(
-            text  = "Game Hub",
+            text  = "Vici",
             style = MaterialTheme.typography.headlineLarge,
             color = MaterialTheme.colorScheme.primary
         )

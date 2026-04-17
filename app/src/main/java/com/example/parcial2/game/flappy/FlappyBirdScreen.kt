@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
@@ -23,7 +24,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -135,13 +135,6 @@ fun FlappyBirdScreen(
             }
         }
 
-        IconButton(
-            onClick = onNavigateBack,
-            modifier = Modifier.padding(20.dp).align(Alignment.TopStart).background(Color.Black.copy(alpha = 0.2f), CircleShape)
-        ) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White)
-        }
-
         if (state.isGameOver) {
             Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)), contentAlignment = Alignment.Center) {
                 Card(
@@ -163,6 +156,7 @@ fun FlappyBirdScreen(
                             }
                         }
                         Spacer(Modifier.height(32.dp))
+                        
                         Button(
                             onClick = { viewModel.restartGame() },
                             modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -173,9 +167,31 @@ fun FlappyBirdScreen(
                             Spacer(Modifier.width(8.dp))
                             Text("Try Again", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                         }
+                        
+                        Spacer(Modifier.height(12.dp))
+                        
+                        OutlinedButton(
+                            onClick = onNavigateBack,
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            shape = CircleShape
+                        ) {
+                            Icon(Icons.Default.Home, null)
+                            Spacer(Modifier.width(8.dp))
+                            Text("Back to Home", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }
+        }
+
+        // Back arrow always on top of everything
+        IconButton(
+            onClick = onNavigateBack,
+            modifier = Modifier
+                .padding(top = 48.dp, start = 20.dp)
+                .background(Color.Black.copy(alpha = 0.3f), CircleShape)
+        ) {
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White)
         }
     }
 }

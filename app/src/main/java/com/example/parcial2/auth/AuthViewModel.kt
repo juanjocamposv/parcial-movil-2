@@ -6,6 +6,9 @@ import com.example.parcial2.data.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.Period
+import java.time.format.DateTimeFormatter
 
 /** Shared ViewModel for Login / Register / ForgotPassword screens. */
 class AuthViewModel : ViewModel() {
@@ -34,8 +37,8 @@ class AuthViewModel : ViewModel() {
     }
 
     // ── Register ──────────────────────────────────────────────────────────────
-    fun register(email: String, password: String, confirm: String, onSuccess: () -> Unit) {
-        if (!validateRegisterInputs(email, password, confirm)) return
+    fun register(email: String, password: String, confirm: String, birthDate: String, onSuccess: () -> Unit) {
+        if (!validateRegisterInputs(email, password, confirm, birthDate)) return
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
@@ -75,12 +78,27 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    private fun validateRegisterInputs(email: String, password: String, confirm: String): Boolean {
-        return when {
-            email.isBlank()         -> { _errorMessage.value = "Email cannot be empty."; false }
-            password.length < 6     -> { _errorMessage.value = "Password must be at least 6 characters."; false }
-            password != confirm     -> { _errorMessage.value = "Passwords do not match."; false }
-            else                    -> true
+    private fun validateRegisterInputs(email: String, password: String, confirm: String, birthDate: String): Boolean {
+        if (email.isBlank()) { _errorMessage.value = "Email cannot be empty."; return false }
+        if (password.length < 6) { _errorMessage.value = "Password must be at least 6 characters."; return false }
+        if (password != confirm) { _errorMessage.value = "Passwords do not match."; return false }
+        
+        // Birth date validation (format YYYY-MM-DD or simple presence)
+        if (birthDate.isBlank()) { _errorMessage.value = "Please enter your birth date."; return false }
+        
+        return try {
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+            val birth = LocalDate.parse(birthDate, formatter)
+            val today = LocalDate.now()
+            if (birth.isAfter(today)) {
+                _errorMessage.value = "You can't be born in the future!"; false
+            } else if (Period.between(birth, today).years < 13) {
+                _errorMessage.value = "You must be at least 13 years old to play."; false
+            } else {
+                true
+            }
+        } catch (e: Exception) {
+            _errorMessage.value = "Invalid date format. Use YYYY-MM-DD."; false
         }
     }
 

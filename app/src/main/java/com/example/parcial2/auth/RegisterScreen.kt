@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -25,9 +26,10 @@ fun RegisterScreen(
     val isLoading    by vm.isLoading.collectAsState()
     val errorMessage by vm.errorMessage.collectAsState()
 
-    var email    by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirm  by remember { mutableStateOf("") }
+    var email     by remember { mutableStateOf("") }
+    var password  by remember { mutableStateOf("") }
+    var confirm   by remember { mutableStateOf("") }
+    var birthDate by remember { mutableStateOf("") } // YYYY-MM-DD
 
     Scaffold(
         topBar = {
@@ -52,7 +54,7 @@ fun RegisterScreen(
             Text("🚀", style = MaterialTheme.typography.headlineLarge)
             Spacer(Modifier.height(8.dp))
             Text(
-                "Join Game Hub",
+                "Join Vici",
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -62,6 +64,13 @@ fun RegisterScreen(
                 value         = email,
                 onValueChange = { email = it; vm.clearError() },
                 label         = "Email"
+            )
+            Spacer(Modifier.height(16.dp))
+            StitchTextField(
+                value         = birthDate,
+                onValueChange = { birthDate = it; vm.clearError() },
+                label         = "Birth Date (YYYY-MM-DD)",
+                keyboardType  = KeyboardType.Number
             )
             Spacer(Modifier.height(16.dp))
             StitchTextField(
@@ -94,7 +103,7 @@ fun RegisterScreen(
             } else {
                 StitchButton(
                     text    = "Create Account",
-                    onClick = { vm.register(email, password, confirm, onRegisterSuccess) }
+                    onClick = { vm.register(email, password, confirm, birthDate, onRegisterSuccess) }
                 )
             }
         }

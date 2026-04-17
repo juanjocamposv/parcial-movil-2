@@ -34,7 +34,7 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Game Hub 👾", style = MaterialTheme.typography.titleLarge) },
+                title = { Text("Vici 👾", style = MaterialTheme.typography.titleLarge) },
                 actions = {
                     IconButton(onClick = { vm.loadUserData() }) {
                         Icon(Icons.Default.Refresh, contentDescription = "Refresh stats")
