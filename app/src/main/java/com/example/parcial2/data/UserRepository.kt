@@ -64,6 +64,25 @@ class UserRepository {
                 .update("memoryBest", moves).await()
         }
     }
+    // Dentro de UserRepository.kt
+
+    /** Carga el mejor puntaje de Flappy Bird */
+    suspend fun loadFlappyBest(): Result<Int> = runCatching {
+        val uid = auth.currentUser?.uid ?: throw IllegalStateException("Not logged in")
+        val doc = db.collection("users").document(uid).get().await()
+        (doc.getLong("flappyBest") ?: 0).toInt()
+    }
+
+    /** Guarda el mejor puntaje de Flappy Bird */
+    suspend fun updateFlappyBest(score: Int): Result<Unit> = runCatching {
+        val uid = auth.currentUser?.uid ?: return@runCatching
+        val doc = db.collection("users").document(uid).get().await()
+        val current = (doc.getLong("flappyBest") ?: 0).toInt()
+        if (score > current) {
+            db.collection("users").document(uid)
+                .update("flappyBest", score).await()
+        }
+    }
 
     fun currentUserEmail(): String? = auth.currentUser?.email
 }

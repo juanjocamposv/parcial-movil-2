@@ -2,10 +2,13 @@ package com.example.parcial2.game.snake
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -15,6 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 
@@ -53,7 +57,14 @@ fun SnakeGameSection(vm: SnakeViewModel = viewModel()) {
                     .fillMaxWidth()
                     .aspectRatio(1f)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFF1A2744)),
+                    .background(Color(0xFF1A2744))
+                    .pointerInput(state.isRunning, state.isGameOver) {
+                        detectTapGestures {
+                            if (!state.isRunning || state.isGameOver) {
+                                vm.startGame()
+                            }
+                        }
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
@@ -93,7 +104,7 @@ fun SnakeGameSection(vm: SnakeViewModel = viewModel()) {
                 // Overlays
                 if (!state.isRunning && !state.isGameOver) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Tap ▶ to Start",
+                        Text("Tap Board to Start",
                             color = Color.White,
                             style = MaterialTheme.typography.titleLarge)
                     }
@@ -109,6 +120,8 @@ fun SnakeGameSection(vm: SnakeViewModel = viewModel()) {
                             style = MaterialTheme.typography.headlineMedium)
                         Text("Score: ${state.score}", color = Color(0xFFFFD54F),
                             style = MaterialTheme.typography.titleLarge)
+                        Text("Tap to Restart", color = Color.White,
+                            style = MaterialTheme.typography.bodyMedium)
                     }
                 }
             }
@@ -119,7 +132,7 @@ fun SnakeGameSection(vm: SnakeViewModel = viewModel()) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 DPadButton(Icons.Default.KeyboardArrowUp) { vm.changeDirection(Direction.UP) }
                 Row {
-                    DPadButton(Icons.Default.KeyboardArrowLeft) { vm.changeDirection(Direction.LEFT) }
+                    DPadButton(Icons.AutoMirrored.Filled.KeyboardArrowLeft) { vm.changeDirection(Direction.LEFT) }
                     Spacer(Modifier.width(8.dp))
                     // Play / Restart button in center
                     FilledIconButton(
@@ -133,7 +146,7 @@ fun SnakeGameSection(vm: SnakeViewModel = viewModel()) {
                         )
                     }
                     Spacer(Modifier.width(8.dp))
-                    DPadButton(Icons.Default.KeyboardArrowRight) { vm.changeDirection(Direction.RIGHT) }
+                    DPadButton(Icons.AutoMirrored.Filled.KeyboardArrowRight) { vm.changeDirection(Direction.RIGHT) }
                 }
                 DPadButton(Icons.Default.KeyboardArrowDown) { vm.changeDirection(Direction.DOWN) }
             }

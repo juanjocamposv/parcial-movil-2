@@ -1,13 +1,14 @@
 package com.example.parcial2.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.parcial2.game.memory.MemoryGameSection
 import com.example.parcial2.game.snake.SnakeGameSection
@@ -24,6 +26,7 @@ import com.example.parcial2.game.snake.SnakeGameSection
 @Composable
 fun HomeScreen(
     onLogout: () -> Unit,
+    onNavigateToFlappy: () -> Unit,
     vm: HomeViewModel = viewModel()
 ) {
     val uiState by vm.uiState.collectAsState()
@@ -37,7 +40,7 @@ fun HomeScreen(
                         Icon(Icons.Default.Refresh, contentDescription = "Refresh stats")
                     }
                     IconButton(onClick = onLogout) {
-                        Icon(Icons.Default.ExitToApp, contentDescription = "Logout")
+                        Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Logout")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -74,7 +77,64 @@ fun HomeScreen(
             // ══════════════════════════════════════════════════════════════════
             MemoryGameSection()
 
+            HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant)
+
+            // ══════════════════════════════════════════════════════════════════
+            // SECTION 4 — Sección Libre (Flappy Bird)
+            // ══════════════════════════════════════════════════════════════════
+            FreeSection(onNavigateToFlappy = onNavigateToFlappy)
+
             Spacer(Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+fun FreeSection(onNavigateToFlappy: () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(
+            text = "Sección Libre 🚀",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
+        
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onNavigateToFlappy() },
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        ) {
+            Row(
+                modifier = Modifier.padding(20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .background(MaterialTheme.colorScheme.surface, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("🐤", fontSize = 32.sp)
+                }
+                Spacer(Modifier.width(16.dp))
+                Column {
+                    Text(
+                        text = "Flappy Bird",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                    Text(
+                        text = "¡Nuevo reto disponible! Toca para jugar",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+                    )
+                }
+            }
         }
     }
 }
@@ -154,7 +214,7 @@ fun UserDashboard(uiState: HomeUiState, onLogout: () -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
                 shape    = RoundedCornerShape(12.dp)
             ) {
-                Icon(Icons.Default.ExitToApp, contentDescription = null)
+                Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
                 Text("Logout")
             }
